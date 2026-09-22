@@ -1,9 +1,12 @@
 // Farol Zero – entry point: one loop, one state machine.
-// Phase 2: menu -> playing <-> paused, won/lost reachable only via debug fns.
+// Phase 2: menu -> playing <-> paused (won/lost reachable only via debug fns).
+// Phase 3: minimum combat – drones chase, auto-fire, projectiles, contact dmg.
 import { CONFIG } from './config.js';
 import { createWorld } from './world.js';
 import { createInput } from './input.js';
 import { createPlayer } from './player.js';
+import { createEnemies } from './enemies.js';
+import { createCombat } from './combat.js';
 import { createUI } from './ui.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -13,12 +16,21 @@ const joystickKnob = document.getElementById('joystick-knob');
 const world = createWorld({ canvas, config: CONFIG });
 const input = createInput({ baseEl: joystickBase, knobEl: joystickKnob });
 const player = createPlayer({ scene: world.scene, config: CONFIG });
+const enemies = createEnemies({ scene: world.scene, config: CONFIG });
+const combat = createCombat({ scene: world.scene, config: CONFIG, enemies });
 
 // --- Single source of truth for the match -------------------------------
 let state = 'menu'; // menu | playing | paused | won | lost
 let simTime = 0; // seconds alive (frozen when not playing)
 let hp = CONFIG.player.maxHp;
 let crystals = CONFIG.resources.startingCrystals;
+let invuln = 0; // seconds of global invulnerability remaining
+
+function damage(dmg) {
+  if (invuln > 0 || hp <= 0) return;
+  hp = Math.max(0, hp - dmg);
+  invuln = CONFIG.combat.invulnTime;
+}
 
 function setState(next) {
   state = next;
@@ -31,7 +43,10 @@ function restart() {
   simTime = 0;
   hp = CONFIG.player.maxHp;
   crystals = CONFIG.resources.startingCrystals;
+  invuln = 0;
   player.reset();
+  enemies.reset(); // fixed five, no stale entities
+  combat.reset();  // clears live projectiles
   setState('playing');
 }
 
@@ -48,7 +63,7 @@ const ui = createUI({
 // Debug-only (no extra UI buttons in the final game):
 window.farolDebug = {
   win: () => { if (state === 'playing') setState('won'); },
-  lose: () => { if (state === 'playing') setState('lost'); },
+  lose: () => { if (state === 'playing') { hp = 0; setState('lost'); } },
   kill: () => { if (state === 'playing') { hp = 0; setState('lost'); } },
 };
 
@@ -67,6 +82,17 @@ function frame(now) {
     simTime += dt;
     const v = input.getVector();
     player.update(dt, v);
+    if (hp > 0) {
+      invuln -= dt;
+      // Drones chase even on the lethal frame; contact applies first.
+      enemies.update(dt, player.position);
+      const onHit = invuln > 0 ? null : () => damage(CONFIG.combat.contactDamage);
+      combat.update(dt, { player, onPlayerHit: onHit });
+      enemies.sweep();
+    } else {
+      // Defeated: no chasing, no auto-attack, no projectiles.
+    }
+    if (hp <= 0) setState('lost'); // real defeat, no buttons
   }
   ui.setHud({ hp, crystals, time: simTime });
   world.update(dt);

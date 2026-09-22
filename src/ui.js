@@ -34,7 +34,7 @@ export function createUI({
     const isOverlay = state === 'paused' || state === 'won' || state === 'lost';
     overlay.classList.toggle('hidden', !isOverlay);
     overlayTitle.textContent =
-      state === 'paused' ? 'Pausado' : state === 'won' ? 'Vitória (debug)' : state === 'lost' ? 'Derrota (debug)' : '';
+      state === 'paused' ? 'Pausado' : state === 'won' ? 'Vitória (debug)' : state === 'lost' ? 'Derrota' : '';
     btnResume.classList.toggle('hidden', state !== 'paused');
   }
 

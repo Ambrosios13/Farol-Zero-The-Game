@@ -12,6 +12,24 @@ export const CONFIG = {
     radius: 0.8,       // collision circle (XZ plane)
   },
 
+  combat: {
+    fireInterval: 0.6,   // s entre disparos do robô
+    range: 10,           // alcance do tiro automático
+    projectileSpeed: 18, // unidades/s
+    projectileDamage: 1,
+    projectileLifetime: 1, // expira após 1 s ou 1 alvo
+    contactDamage: 10,
+    invulnTime: 0.8,     // invulnerabilidade global após dano
+  },
+
+  enemies: {
+    count: 5,
+    speed: 3.2,
+    hp: 2,
+    radius: 0.7,
+    separation: 0.6,     // drones se separam abaixo dessa distância
+  },
+
   resources: {
     startingCrystals: 6, // cristais iniciais (Fase 4 consome/ativa faróis)
   },
@@ -23,6 +41,8 @@ export const CONFIG = {
     wallTrim: 0x37e0ff,
     robot: 0xf2f5f7,
     robotAccent: 0x37e0ff,
+    enemy: 0xff6b57,   // coral (drones)
+    projectile: 0x37e0ff,
     light: 0xbfd4ff,
   },
 
@@ -35,6 +55,7 @@ export const CONFIG = {
   perf: {
     maxPixelRatio: 1.5,
     maxDt: 0.05,        // clamp dt to 0.05 s
+    maxProjectiles: 40,
   },
 };
 
