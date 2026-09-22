@@ -24,7 +24,7 @@
   `list` tem drones `{x,z,hp,radius,alive,group}`.
 - `createCombat({scene,config,enemies})` → `{ live, update(dt,{player,onPlayerHit}), reset() }`;
   `onPlayerHit` = null durante invulnerabilidade / hp≤0.
-- `main.restart()` continua idempotente (sem 2º loop nem listeners extras), agora cobre combate.
+- `main.restart()` idempotente, agora cobre combate.
 - Estados: 'menu' | 'playing' | 'paused' | 'won' | 'lost'.
 
 ## Testes realizados (Fase 3)
@@ -34,9 +34,8 @@
   projétil não alcança alvo a 25u (18 u/s em 1 s); hp≤0 → nenhum tiro e sem contato;
   contatos sobrepostos → 1 dano por quadro; restart limpa projéteis + inimigos antigos (0 resíduos).
   PASS.
-- `node --check` em main/config/enemies/combat: OK. Regressão: `phase2-check.mjs`
-  (ALL PASS), `frame-check.mjs`, `input-test.mjs` (sem regressão). Server smoke: 200 para `/` e
-  todos os `src/*.js` (servidor local na porta 3000 durante o teste; parado e limpo).
+- `node --check` em main/config/enemies/combat: OK. Regressão: `phase2-check.mjs` (ALL PASS),
+  `frame-check.mjs`, `input-test.mjs`. Server smoke: 200 para `/` e todos `src/*.js`.
 - PENDENTE: teste real em celular/toque (Fase 8) e gameplay humano no navegador (sem browser
   real disponível na sessão) — verificado por teste headless de máquina no Node.
 
