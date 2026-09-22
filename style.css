@@ -1,0 +1,78 @@
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-left: env(safe-area-inset-left);
+  --safe-right: env(safe-area-inset-right);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #050b16;
+  font-family: system-ui, sans-serif;
+}
+
+#game-root {
+  position: fixed;
+  inset: 0;
+  touch-action: none; /* no scroll / pinch on game surface */
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* HUD reserves layout top strip; kept out of joystick zone */
+#hud { position: absolute; left: 0; right: 0; top: 0; pointer-events: none; }
+.safe-pad {
+  position: absolute;
+  padding: calc(var(--safe-top) + 8px) calc(var(--safe-right) + 12px) 0 calc(var(--safe-left) + 12px);
+}
+#hud-top { display: flex; gap: 16px; align-items: center; color: #bfe9ff; font-size: 16px; }
+#hud-hp, #hud-timer { min-width: 64px; background: rgba(8, 20, 38, 0.55); padding: 4px 10px; border-radius: 8px; }
+
+/* Joystick: bottom-left, min 48px target, safe-area aware */
+#joystick {
+  position: absolute;
+  bottom: calc(var(--safe-bottom) + 24px);
+  left: calc(var(--safe-left) + 24px);
+  width: 128px;
+  height: 128px;
+}
+#joystick-base {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(180, 220, 255, 0.10);
+  border: 2px solid rgba(120, 200, 255, 0.35);
+  touch-action: none;
+}
+#joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgba(150, 225, 255, 0.45);
+  border: 2px solid rgba(190, 240, 255, 0.8);
+  pointer-events: none;
+}
+
+/* Landscape: joystick slides to bottom-center-left to free screen */
+@media (orientation: landscape) {
+  #joystick {
+    bottom: calc(var(--safe-bottom) + 16px);
+    left: calc(var(--safe-left) + 16px);
+    width: 112px;
+    height: 112px;
+  }
+}

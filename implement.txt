@@ -1,0 +1,63 @@
+Farol Zero - plano de implementaá∆o incremental
+Conceito e escopo
+Jogo solo 3D com cÉmera fixa inclinada, arena pequena e partidas de 3-5 minutos. Um robì de manutená∆o precisa reativar tràs far¢is em uma ilha tecnol¢gica tomada por drones. Coletar energia, escolher quando deposit†-la e abrir espaáo entre inimigos comp
+Visual: low-poly constru°do com primitivas; ch∆o azul-escuro, robì branco, energia ciano, inimigos coral e far¢is dourados. Far¢is acesos mudam a aparància da arena. Sem modelos, texturas ou †udio externos obrigat¢rios.
+Vers∆o final: uma arena, tràs far¢is, dois tipos de inimigo, tràs melhorias, vit¢ria/derrota e recorde local. Sem multiplayer, mundo aberto, invent†rio, crafting, f°sica de terceiros ou geraá∆o procedural.
+Regras de jogo
+Movimento no plano XZ; cÉmera sem rotaá∆o manual. WASD/setas no computador e joystick virtual no celular. Vetor de movimento relativo Ö orientaá∆o da cÉmera.
+O robì comeáa com 100 de vida e dispara contra o inimigo mais pr¢ximo dentro do alcance. N∆o h† mira manual.
+Comeáar com 6 cristais em posiá‰es fixas. Cada inimigo eliminado deixa 1 cristal; aproximaá∆o coleta automaticamente. Limite de 30 cristais soltos; acima dele, n∆o criar novos drops.
+Cada farol consome 8 cristais. Perto de um farol apagado, ficar 2 segundos na †rea com saldo suficiente o ativa. Sair interrompe e zera o progresso; desconto ocorre apenas na conclus∆o.
+Vit¢ria ao ativar os tràs far¢is; derrota ao chegar a zero de vida. Sem limite de tempo obrigat¢rio; mostrar duraá∆o da partida.
+Contato inimigo causa 10 de dano, com invulnerabilidade global de 0,8 s. N∆o acumular dano por v†rios contatos no mesmo instante.
+Valores iniciais s∆o ajust†veis em configuraá∆o: velocidade 6 unidades/s, disparo a cada 0,6 s, alcance 10, projÇtil a 18 unidades/s, dano 1 e vida do drone comum 2.
+Contrato tÇcnico permanente
+Three.js + JavaScript com m¢dulos ES + HTML/CSS; servidor local simples, sem framework de UI. Fixar a vers∆o escolhida de Three.js e manter a mesma durante o projeto.
+Arquivos pequenos: index.html, style.css, src/main.js, config.js, world.js, input.js, player.js, combat.js, enemies.js, objectives.js, ui.js. Criar cada m¢dulo apenas quando necess†rio. Paths JS ficam em src/.
+main.js coordena um £nico loop e estados menu, playing, paused, won, lost. Sistemas recebem suas dependàncias por parÉmetros; evitar imports circulares e vari†veis globais espalhadas.
+input exp‰e vetor normalizado de movimento e reset. Sistemas usam update(dt); velocidades e temporizadores n∆o dependem do n£mero de frames. Limitar dt a 0,05 s.
+Colis‰es simples no plano XZ: c°rculos para entidades e limite retangular da arena. Sem obst†culos internos bloqueantes; decoraá∆o fica fora da †rea naveg†vel.
+Estado de gameplay separado da representaá∆o visual. IDs est†veis; remover entidades ap¢s a iteraá∆o. Reutilizar geometria/material; n∆o descartar recursos compartilhados ao remover uma entidade.
+Pausar congela todos os temporizadores de jogo. Perder foco ou ocultar a p†gina pausa e limpa os comandos. Voltar exige retomar explicitamente.
+Reiniciar restaura entidades, vida, saldo, far¢is, melhorias e temporizadores sem criar outro loop ou duplicar listeners.
+Celular Ç requisito desde a fase 1. Canvas responsivo em retrato e paisagem, HUD sem cobrir controles, bot‰es de pelo menos 48 px e respeito Ös †reas seguras da tela.
+Joystick usa Pointer Events e captura de ponteiro. Tratar pointerup, pointercancel e perda de captura; n∆o deixar movimento preso. Impedir scroll/gestos na superf°cie do jogo.
+Meta de desempenho, a medir: 30 FPS sustentados no celular de teste. Iniciar com pixel ratio limitado a 1,5, sem sombras dinÉmicas ou p¢s-processamento; m†ximo de 24 inimigos e 40 projÇteis. N∆o prometer compatibilidade sem teste real.
+Como executar com contexto de 49k
+Uma fase por sess∆o. Os 49k incluem instruá‰es, c¢digo lido, resultados de ferramentas e resposta; n∆o representam oráamento s¢ para implementaá∆o. Como regra operacional, tentar manter o contexto ocupado abaixo de aproximadamente 30k e deixar margem par
+Carregar este plano e STATUS.md; inspecionar apenas os arquivos envolvidos na fase.
+Implementar somente a fase solicitada. N∆o antecipar fases nem reescrever o projeto inteiro.
+Verificar os critÇrios da fase e os controles j† existentes. Corrigir antes de avanáar.
+Registrar em STATUS.md, em atÇ 50 linhas: £ltima fase aprovada, mudanáas, interfaces relevantes, testes realizados, pendàncias e pr¢xima fase.
+Fazer commit/checkpoint antes da pr¢xima sess∆o. Se o contexto crescer demais, registrar o estado e continuar a mesma fase em nova sess∆o.
+N∆o devolver arquivos completos no chat: editar no workspace e resumir alteraá‰es. Logs curtos; ler trechos direcionados. Teste n∆o executado deve constar como pendente. Uma fase s¢ est† aprovada quando os critÇrios foram verificados, inclusive os testes
+Fase 1 - arena e controle
+Implementar: cena, iluminaá∆o simples, arena de 36 û 36, robì, cÉmera ortogr†fica inclinada, movimento, limites, joystick e resize. CÉmera enquadra a arena ajustando a projeá∆o Ö orientaá∆o da tela. Se o enquadramento ficar pequeno demais no celular, cor
+Aceite: navegar por toda a arena por teclado e toque; diagonais sem velocidade extra; soltar/cancelar toque interrompe movimento; girar o celular n∆o distorce a cena nem esconde controles. P†gina n∆o rola durante a partida.
+Fase 2 - ciclo da partida
+Implementar: menu com Iniciar, pausa/retomada, cronìmetro, HUD de vida e energia e rein°cio. Criar a transiá∆o central de estados; vit¢ria/derrota ainda podem ser acionadas por funá∆o de depuraá∆o, sem bot‰es extras na UI final.
+Aceite: pausar congela movimento e rel¢gio; trocar de aba pausa; retomar n∆o provoca salto; reiniciar cinco vezes n∆o acelera a simulaá∆o nem duplica eventos.
+Fase 3 - combate m°nimo
+Implementar: cinco drones fixos que perseguem o jogador, ataque autom†tico, projÇteis, dano, remoá∆o de mortos e derrota. Perseguiá∆o direta, sem pathfinding; separaá∆o simples entre drones para reduzir sobreposiá∆o. ProjÇteis expiram ap¢s 1 segundo ou a
+Aceite: disparos s¢ ocorrem com alvo no alcance; cada projÇtil atinge no m†ximo uma entidade; contato respeita invulnerabilidade; derrotado n∆o se move nem atira; reiniciar limpa todos os projÇteis e inimigos antigos.
+Fase 4 - objetivo completo: primeiro jogo utiliz†vel
+Implementar: cristais iniciais, drops/coleta, tràs far¢is, progresso de ativaá∆o, contador de far¢is e vit¢ria. Far¢is ficam em pontos separados, dentro dos limites. Apenas um pode receber progresso por vez.
+Aceite: saldo insuficiente impede ativaá∆o; sair cancela progresso; cada farol cobra exatamente 8 uma £nica vez; o terceiro encerra a partida. Poss°vel vencer usando os cristais iniciais e os cinco drones; reiniciar restaura tudo. Vit¢ria e derrota n∆o p
+Fase 5 - press∆o cont°nua
+Implementar: substituir os cinco drones fixos pelo surgimento cont°nuo nas bordas. Comeáar com um drone a cada 2 s; a cada farol ativo reduzir o intervalo em 0,3 s. Introduzir drone veloz ap¢s o primeiro farol: metade da vida, velocidade 40% maior, 25% d
+Aceite: nunca superar 24 inimigos; ao atingir o limite, adiar surgimento sem acumular fila. N∆o surgir a menos de 6 unidades do jogador; sem posiá∆o v†lida, tentar no pr¢ximo intervalo. Continuar poss°vel obter energia suficiente para vencer.
+Fase 6 - escolhas durante a partida
+Implementar: ap¢s o primeiro e o segundo farol, pausar e oferecer tràs escolhas: +25% de velocidade de disparo, +20% de movimento ou recuperar 35 de vida. Escolher uma e continuar; permitir repetir. Disparo usa frequància multiplicada por 1,25, evitando 
+Aceite: apenas uma escolha por ativaá∆o; menu funciona ao toque; recuperaá∆o n∆o passa de 100; nada simula durante a escolha; rein°cio remove os bìnus. Terceiro farol leva diretamente Ö vit¢ria.
+Fase 7 - legibilidade e acabamento
+Implementar: flashes breves de dano, pequenas part°culas limitadas, animaá∆o dos far¢is, feedback de coleta, indicaá∆o de ataque autom†tico e instruá∆o curta no in°cio. Tela final com resultado, tempo e eliminaá‰es. Recorde de menor tempo de vit¢ria em l
+Aceite: entender objetivo e controles sem explicaá∆o externa; distinguir os dois inimigos sem depender s¢ da cor; part°culas expiram e respeitam limite de 60; interface leg°vel nas duas orientaá‰es; falha ao salvar recorde n∆o interrompe o jogo.
+Fase 8 - validaá∆o no celular e balanceamento
+Implementar: opá∆o de qualidade baixa com pixel ratio 1 e part°culas desativadas. Medir desempenho com populaá∆o m†xima; corrigir apenas problemas observados. Ajustar n£meros para partidas t°picas de 3-5 minutos, sem acrescentar mecÉnicas.
+Aceite: jogar uma partida completa no computador e no celular real; testar toque cancelado, mudanáa de orientaá∆o, pausa por troca de app, derrota, vit¢ria e rein°cio. Observar cinco minutos sem crescimento cont°nuo de entidades. Registrar aparelho/naveg
+Entrega: c¢digo, instruá‰es curtas para servir por HTTP e acessar pelo celular na mesma rede, e STATUS.md atualizado. N∆o abrir portas na internet. N∆o iniciar novas funcionalidades enquanto houver bloqueadores.
+Prompt para cada sprint
+
+
+
+
