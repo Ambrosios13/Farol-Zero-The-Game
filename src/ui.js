@@ -20,13 +20,19 @@ export function createUI({
   const btnResume = doc.getElementById('btn-resume');
   const hudHP = doc.getElementById('hud-hp');
   const hudEnergy = doc.getElementById('hud-energy');
+  const hudBeacons = doc.getElementById('hud-beacons');
   const hudTimer = doc.getElementById('hud-timer');
   const hud = doc.getElementById('hud');
   const btnPause = doc.getElementById('btn-pause');
   const btnStart = doc.getElementById('btn-start');
   const btnRestart = doc.getElementById('btn-restart');
 
-  const lastShown = { hp: null, crystals: null };
+  const lastShown = { hp: null, crystals: null, beacons: null };
+  const totalBeacons = 3;
+
+  function beaconLabel(n) {
+    return Array.from({ length: totalBeacons }, (_, i) => (i < n ? '●' : '○')).join(' ');
+  }
 
   function show(state) {
     menu.classList.toggle('hidden', state !== 'menu');
@@ -34,13 +40,17 @@ export function createUI({
     const isOverlay = state === 'paused' || state === 'won' || state === 'lost';
     overlay.classList.toggle('hidden', !isOverlay);
     overlayTitle.textContent =
-      state === 'paused' ? 'Pausado' : state === 'won' ? 'Vitória (debug)' : state === 'lost' ? 'Derrota' : '';
+      state === 'paused' ? 'Pausado' : state === 'won' ? 'Vitória' : state === 'lost' ? 'Derrota' : '';
     btnResume.classList.toggle('hidden', state !== 'paused');
   }
 
-  function setHud({ hp, crystals, time }) {
+  function setHud({ hp, crystals, time, beacons = 0 }) {
     if (lastShown.hp !== hp) { hudHP.textContent = String(hp); lastShown.hp = hp; }
     if (lastShown.crystals !== crystals) { hudEnergy.textContent = String(crystals); lastShown.crystals = crystals; }
+    if (lastShown.beacons !== beacons) {
+      hudBeacons.textContent = beaconLabel(beacons);
+      lastShown.beacons = beacons;
+    }
     hudTimer.textContent = formatTime(time);
   }
 

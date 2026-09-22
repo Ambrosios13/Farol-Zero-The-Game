@@ -11,7 +11,7 @@ const SLOTS = [
   [15, 11],
 ];
 
-export function createEnemies({ scene, config }) {
+export function createEnemies({ scene, config, onKill = null }) {
   const { speed, hp: maxHp, radius, count } = config.enemies;
   const halfLimit = config.arena.size / 2 - radius;
 
@@ -80,6 +80,7 @@ export function createEnemies({ scene, config }) {
     if (drone.hp <= 0) {
       drone.alive = false;
       drone.group.visible = false; // hidden until sweep() removes it
+      if (onKill) onKill(drone.x, drone.z); // drop hook (Phase 4)
     }
   }
 

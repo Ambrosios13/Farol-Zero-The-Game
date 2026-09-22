@@ -37,6 +37,7 @@ html, body {
 }
 #hud-top { display: flex; gap: 16px; align-items: center; color: #bfe9ff; font-size: 16px; }
 #hud-hp, #hud-timer { min-width: 64px; background: rgba(8, 20, 38, 0.55); padding: 4px 10px; border-radius: 8px; }
+#hud-beacons { color: #ffd34d; letter-spacing: 2px; }
 
 /* Joystick: bottom-left, min 48px target, safe-area aware */
 #joystick {

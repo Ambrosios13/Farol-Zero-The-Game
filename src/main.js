@@ -1,12 +1,11 @@
 // Farol Zero – entry point: one loop, one state machine.
-// Phase 2: menu -> playing <-> paused (won/lost reachable only via debug fns).
-// Phase 3: minimum combat – drones chase, auto-fire, projectiles, contact dmg.
 import { CONFIG } from './config.js';
 import { createWorld } from './world.js';
 import { createInput } from './input.js';
 import { createPlayer } from './player.js';
 import { createEnemies } from './enemies.js';
 import { createCombat } from './combat.js';
+import { createObjectives } from './objectives.js';
 import { createUI } from './ui.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -16,15 +15,23 @@ const joystickKnob = document.getElementById('joystick-knob');
 const world = createWorld({ canvas, config: CONFIG });
 const input = createInput({ baseEl: joystickBase, knobEl: joystickKnob });
 const player = createPlayer({ scene: world.scene, config: CONFIG });
-const enemies = createEnemies({ scene: world.scene, config: CONFIG });
+const objectives = createObjectives({ scene: world.scene, config: CONFIG });
+const enemies = createEnemies({ scene: world.scene, config: CONFIG, onKill: (x, z) => objectives.dropCrystal(x, z) });
 const combat = createCombat({ scene: world.scene, config: CONFIG, enemies });
 
 // --- Single source of truth for the match -------------------------------
 let state = 'menu'; // menu | playing | paused | won | lost
 let simTime = 0; // seconds alive (frozen when not playing)
 let hp = CONFIG.player.maxHp;
-let crystals = CONFIG.resources.startingCrystals;
+let crystals = 0; // saldo; os 6 iniciais são cristais soltos no campo (objectives)
 let invuln = 0; // seconds of global invulnerability remaining
+
+// Crystal balance — main owns it; objectives just mutate through this.
+const bank = {
+  get: () => crystals,
+  add: (n) => { crystals += n; },
+  spend: (n) => { crystals = Math.max(0, crystals - n); },
+};
 
 function damage(dmg) {
   if (invuln > 0 || hp <= 0) return;
@@ -42,12 +49,17 @@ function restart() {
   // Idempotent: restore values/entities without new loops or listeners.
   simTime = 0;
   hp = CONFIG.player.maxHp;
-  crystals = CONFIG.resources.startingCrystals;
+  crystals = 0; // os 6 iniciais voltam como cristais soltos via objectives.reset()
   invuln = 0;
   player.reset();
   enemies.reset(); // fixed five, no stale entities
   combat.reset();  // clears live projectiles
+  objectives.reset(); // restore the six start crystals + three beacons
   setState('playing');
+}
+
+function onWin() {
+  if (state === 'playing') setState('won');
 }
 
 const ui = createUI({
@@ -82,6 +94,12 @@ function frame(now) {
     simTime += dt;
     const v = input.getVector();
     player.update(dt, v);
+    objectives.update(
+      dt,
+      player.position,
+      bank,
+      state === 'playing' ? onWin : null,
+    );
     if (hp > 0) {
       invuln -= dt;
       // Drones chase even on the lethal frame; contact applies first.
@@ -92,9 +110,9 @@ function frame(now) {
     } else {
       // Defeated: no chasing, no auto-attack, no projectiles.
     }
-    if (hp <= 0) setState('lost'); // real defeat, no buttons
+    if (hp <= 0 && state === 'playing') setState('lost'); // real defeat
   }
-  ui.setHud({ hp, crystals, time: simTime });
+  ui.setHud({ hp, crystals, time: simTime, beacons: objectives.litCount });
   world.update(dt);
   world.renderer.render(world.scene, world.camera);
   requestAnimationFrame(frame);

@@ -31,7 +31,19 @@ export const CONFIG = {
   },
 
   resources: {
-    startingCrystals: 6, // cristais iniciais (Fase 4 consome/ativa faróis)
+    startingCrystals: 6, // cristais soltos iniciais (posições fixas no campo)
+    maxLoose: 30,        // limite de cristais soltos; acima disso, sem novos drops
+    crystalRadius: 0.35,
+    collectRadius: 1.3, // distância de coleta automática (centro do cristal)
+    dropPerKill: 5, // cristais soltos por drone abatido (salvado)
+  },
+
+  beacons: {
+    count: 3,
+    cost: 8,          // cristais por farol (cobrados 1x, só na conclusão)
+    channelTime: 2,  // s contínuo na área do farol com saldo suficiente
+    radius: 3,       // área de influência do farol
+    spots: [[-15, 2], [15, 2], [0, -13]], // dentro da arena, bem separados
   },
 
   colors: {
@@ -43,6 +55,9 @@ export const CONFIG = {
     robotAccent: 0x37e0ff,
     enemy: 0xff6b57,   // coral (drones)
     projectile: 0x37e0ff,
+    crystal: 0x37e0ff,
+    beaconOff: 0x51637d,
+    beaconLit: 0xffd34d,
     light: 0xbfd4ff,
   },
 
