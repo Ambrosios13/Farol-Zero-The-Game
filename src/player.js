@@ -48,6 +48,12 @@ export function createPlayer({ scene, config = CONFIG }) {
   const position = new THREE.Vector3(0, 0, 4);
   group.position.copy(position);
 
+  function reset() {
+    position.set(0, 0, 4);
+    group.position.copy(position);
+    group.rotation.set(0, 0, 0);
+  }
+
   function update(dt, inputVec) {
     const vx = inputVec.x * speed * dt;
     const vz = inputVec.z * speed * dt;
@@ -65,5 +71,5 @@ export function createPlayer({ scene, config = CONFIG }) {
     scene.remove(group);
   }
 
-  return { group, position, radius, update, dispose };
+  return { group, position, radius, update, reset, dispose };
 }

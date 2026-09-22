@@ -14,8 +14,24 @@
     <div id="hud" class="safe-pad">
       <div id="hud-top">
         <div id="hud-hp" aria-label="vida">100</div>
+        <div id="hud-energy" aria-label="cristais">0</div>
         <div id="hud-timer">0:00</div>
       </div>
+    </div>
+
+    <!-- Phase 2: pause button (touch target >= 48px), menu, overlays -->
+    <button id="btn-pause" class="safe-pad-right hidden" aria-label="pausar">❚❚</button>
+
+    <div id="menu" class="screen">
+      <h1>Farol Zero</h1>
+      <p class="hint">WASD/setas · toque = joystick · P/ESC = pausa</p>
+      <button id="btn-start" type="button">Iniciar</button>
+    </div>
+
+    <div id="overlay" class="screen hidden">
+      <h2 id="overlay-title">Pausado</h2>
+      <button id="btn-resume" type="button">Retomar</button>
+      <button id="btn-restart" type="button">Reiniciar</button>
     </div>
 
     <!-- Virtual joystick (cellular requirement since phase 1) -->

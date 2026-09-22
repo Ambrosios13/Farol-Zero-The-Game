@@ -76,3 +76,54 @@ html, body {
     height: 112px;
   }
 }
+
+/* Phase 2 – screens, palette and overlays */
+.hidden { display: none !important; }
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  color: #dff4ff;
+  background: rgba(5, 11, 22, 0.82);
+  z-index: 10;
+  padding: calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px)
+    calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px);
+}
+.screen h1 { font-size: 40px; letter-spacing: 2px; color: #bfe9ff; }
+.screen h2 { font-size: 28px; color: #bfe9ff; }
+.screen .hint { font-size: 14px; opacity: 0.75; }
+
+.screen button {
+  min-width: 160px;
+  min-height: 48px;
+  font-size: 18px;
+  color: #dff4ff;
+  background: rgba(55, 224, 255, 0.14);
+  border: 2px solid rgba(55, 224, 255, 0.55);
+  border-radius: 10px;
+  touch-action: manipulation;
+}
+.screen button:active { background: rgba(55, 224, 255, 0.3); }
+
+#btn-pause {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 5;
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+  color: #dff4ff;
+  background: rgba(8, 20, 38, 0.55);
+  border: 2px solid rgba(55, 224, 255, 0.45);
+  border-radius: 10px;
+  touch-action: manipulation;
+}
+
+#hud-paused-note { pointer-events: none; }

@@ -1,42 +1,45 @@
 # STATUS – Farol Zero
 
-**Última fase aprovada: Fase 1 (arena e controle) — pendente de teste real em celular**
+**Última fase aprovada: Fase 2 (ciclo da partida) — critérios de máquina verificados; teste real em celular ainda pendente (Fase 8)**
 
-## Mudanças (Fase 1)
-- three@0.186.0 fixado; cópia estática em `vendor/three.module.js` (sem CDN).
-- `server.mjs`: servidor local HTTP simples (porta 3000, LAN, sem internet).
-- `index.html`/`style.css`: canvas fullscreen, safe-areas, joystick 128px (mín 48px),
-  page nunca rola (`touch-action:none`, overflow hidden).
-- `src/config.js`: valores fixos + `computeOrthoBounds()` (framagem puramente matemática).
-- `src/world.js`, `src/input.js`, `src/player.js`, `src/main.js`.
+## Mudanças (Fase 2)
+- `src/ui.js` novo: telas de menu/pausa/resultado por classes no DOM, `formatTime()`,
+  `setHud()` com escrita apenas quando muda, teclas Esc/P = pausa.
+- `state` agora: menu → playing ⇄ paused; won/lost só via `window.farolDebug.{win,lose,kill}`
+  (sem botões na UI final). `setState()` é a transição central: troca + `input.reset()`
+  + `ui.show()`. Loop único e dt clamped, como Fase 1.
+- HUD: vida, cristais (`hud-energy`), cronômetro `M:SS` (congela fora de playing).
+- Botões ≥48px: Iniciar, Pausar (❚❚), Retomar, Reiniciar; menus são overlays (`.screen`).
+- Pausa automática: `blur` e `visibilitychange` → paused quando playing;
+  retomar só via UI. `restart()` idempotente (valores + `player.reset()`, sem 2º loop
+  nem listeners extras) usado para Iniciar, Reiniciar e pós-fim de partida.
+- `config.js`: `player.maxHp`, `resources.startingCrystals: 6` (consumo na Fase 4).
+- `player.js`: `reset()` devolve grupo a (0,0,4) e rotação zero.
 
 ## Interfaces relevantes
-- `createInput({baseEl, knobEl})` → `{ getVector(): {x,z} (norm., eixo W=-Z), reset() }`
-- `createPlayer({scene})` → `{ group, position:Vector3, radius, update(dt, vec) }`
-- `createWorld({canvas})` → `{ renderer, scene, camera, arena:{half}, update(dt), dispose() }`
-- Camera ortográfica: phi=50°, lookAt origem; W = tamanho*1.2 / aspect em retrato,
-  H dominado por `size*margin*sin(phi)` em paisagem. dt sempre clampado a 0.05 s.
-- `main.js`: único `requestAnimationFrame`, estado único `state='playing'`
-  (menu/paused/won/lost entram na Fase 2; loop único não muda).
+- `createUI({onStart,onResume,onRestart,onTogglePause})` → `{ show(state), setHud({hp,crystals,time}), dispose() }`
+- `createPlayer({scene})` → agora inclui `reset()` (posição/rotação iniciais).
+- Estados: 'menu' | 'playing' | 'paused' | 'won' | 'lost'; só 'playing' avança
+  `simTime` e chama `player.update(dt, v)`.
+- Debug: `window.farolDebug.win()/lose()/kill()` (vitória/derrota forçadas p/ testar).
 
 ## Testes realizados
-- `node tests/frame-check.mjs`: 4 cantos + 2 muros projetados em NDC para
-  9:16, 1:1, 16:9, 19.5:9 → todos dentro de ±1; margem mín. 0.146. PASS.
-- Servidor: 200 para `/`, `src/*` e `vendor/three.module.js`. PASS.
-- `node --check`/import de todos os modules: OK (main falha só no DOM — esperado).
-- player.js: 1s direita → x=6; clamp no limite 17.2 (18−0.8). PASS.
-- `tests/input-test.mjs`: W→(0,−1); W+D normalizado len=1; setas OK;
-  pointerdown/move do joystick OK; pointercancel zera; reset limpa. PASS.
-- Câmera: phi=50°, lookAt origem, sem rotação manual; enquadramento por NDC
-  (tests/frame-check.mjs). dt sempre clampado a 0.05 s.
+- `node tests/phase2-check.mjs`: formatTime (0, 59, 60, 125, negativo); 5x restart
+  restaura valores e mantém estado único; pausa congela relógio (soma dt só em
+  playing). PASS.
+- `node --check` em main/ui/player/config: OK. `tests/input-test.mjs` continua PASS.
+- Servidor: 200 para `/` e `/src/ui.js`; HTML contém btn-start/btn-pause/btn-restart/
+  hud-energy. PASS (servidor local em uso na porta 3000 durante o teste).
+- PENDENTE: teste real em celular (toque nos botões, rotação, troca de app) — Fase 8.
 
 ## Como rodar
 `npm start` → `http://localhost:3000` (celular: mesma Wi‑Fi, `http://<ip-do-pc>:3000`).
 
 ## Pendências
-- Teste real em celular (toque + rotação de tela): PENDENTE (Fase 8).
-- 30 FPS no celular de teste: PENDENTE (Fase 8).
+- Teste real em celular (Fase 8) de botões/menu/rotação/pausa por troca de app.
+- won/lost: tela de resultado já existe ("Vitória/Derrota (debug)"), mas só debug ancora.
 
 ## Próxima fase
-Fase 2 — ciclo da partida (menu Iniciar, pausa/retomada, cronômetro, HUD
-vida/energia, reinício, transição central de estados). Vitória/derrota só por função de depuração.
+Fase 3 — combate mínimo: cinco drones fixos perseguidores, ataque automático
+(0,6 s, alcance 10), projéteis (v=18, dano 1, vida drone 2, expiram 1 s e 1 alvo),
+dano por contato (10) com invulnerabilidade 0,8 s, remoção de mortos, derrota real.

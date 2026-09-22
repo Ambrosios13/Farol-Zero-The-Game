@@ -7,8 +7,13 @@ export const CONFIG = {
 
   player: {
     hp: 100,
+    maxHp: 100,
     speed: 6,          // units/s
     radius: 0.8,       // collision circle (XZ plane)
+  },
+
+  resources: {
+    startingCrystals: 6, // cristais iniciais (Fase 4 consome/ativa faróis)
   },
 
   colors: {
