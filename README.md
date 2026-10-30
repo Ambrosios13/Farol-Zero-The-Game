@@ -136,7 +136,7 @@ Todos os testes passam ✅ — cobrindo arena, combate, objetivos e estados do j
 
 ---
 
-## 📋 Roadmap (Fases planejadas)
+## 🚀 Roadmap (Fases planejadas)
 
 | Fase | Conteúdo | Status |
 |------|----------|--------|
@@ -148,6 +148,14 @@ Todos os testes passam ✅ — cobrindo arena, combate, objetivos e estados do j
 | 6 | Melhorias durante a partida (escolhas estratégicas) | 📝 Planejado |
 | 7 | Legibilidade, partículas, feedback visual | 📝 Planejado |
 | 8 | Validação em celular, balanceamento final | 📝 Planejado |
+
+## 📸 Screenshots
+
+![Gameplay 1](Assets/img1farol.png)
+![Gameplay 2](Assets/img2farol.png)
+![Gameplay 3](Assets/img3farol.png)
+
+---
 
 ---
 
