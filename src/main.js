@@ -26,6 +26,14 @@ let hp = CONFIG.player.maxHp;
 let crystals = 0; // saldo; os 6 iniciais são cristais soltos no campo (objectives)
 let invuln = 0; // seconds of global invulnerability remaining
 
+// combat.js checks player.hp — bridge main's match hp into the player
+// so auto-attack and contact damage see the real value.
+const combatPlayer = {
+  position: player.position,
+  radius: player.radius,
+  get hp() { return hp; },
+};
+
 // Crystal balance — main owns it; objectives just mutate through this.
 const bank = {
   get: () => crystals,
@@ -103,9 +111,10 @@ function frame(now) {
     if (hp > 0) {
       invuln -= dt;
       // Drones chase even on the lethal frame; contact applies first.
-      enemies.update(dt, player.position);
-      const onHit = invuln > 0 ? null : () => damage(CONFIG.combat.contactDamage);
-      combat.update(dt, { player, onPlayerHit: onHit });
+      enemies.update(dt, player.position, objectives.litCount);
+      // Per-drone contact damage: regular vs fast (Phase 5).
+      const onHit = invuln > 0 ? null : (e) => damage(e.damage);
+      combat.update(dt, { player: combatPlayer, onPlayerHit: onHit });
       enemies.sweep();
     } else {
       // Defeated: no chasing, no auto-attack, no projectiles.

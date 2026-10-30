@@ -1,6 +1,19 @@
 # STATUS – Farol Zero
 
-**Última fase aprovada: Fase 4 (objetivo completo) — critérios de máquina verificados; teste real em celular ainda pendente (Fase 8)**
+**Última fase aprovada: Fase 4 (objetivo completo) — corrigido em 22/09: bug que impedia o robô de atirar e o dano por contato (player sem `hp` no objeto passado ao combat)**
+
+## Corrigido (bug de bloqueio da vitória)
+- `src/main.js`: `combat.update` recebia o objeto real do player, mas `combat.js`
+  confere `player.hp > 0` para atirar e aplicar dano — o player não tem `hp`
+  próprio (a vida mora em `main.js`) → `undefined > 0` = falso → robô nunca
+  atirava, contato não fazia dano (imortal), drones nunca morriam, cristais
+  travavam em 6 (< custo 8) → **impossível acender farol**. Solução: ponte
+  `combatPlayer = { position, radius, get hp() { return hp; } }` lida o `hp`
+  da partida. Teste de regressão em `phase3-check.mjs` (bridge dispara em
+  alcance; hp=0 no match → não dispara).
+- Nota: "drones não atiram" é o design (implement.txt §regras): drone só dá
+  dano por contato (10) com invulnerabilidade 0,8 s.
+- Todos os testes: phase3/phase4/frame-check ALL PASS. Server 200 em /src/main.js.
 
 ## Mudanças (Fase 4)
 - `src/objectives.js` novo: cristais soltos (6 iniciais em pontos fixos longe do spawn,
@@ -49,6 +62,7 @@
 `npm start` → `http://localhost:3000` (celular: mesma Wi‑Fi, `http://<ip-do-pc>:3000`).
 
 ## Pendências
+- Testar no navegador: acender o 3º farol e ver vitória; rolagem de cristais.
 - Teste real em celular (Fase 8): botões/menu/rotação/pausa por troca de app.
 - `window.farolDebug.win()/lose()/kill()` continuam por depuração (derrota já é real).
 

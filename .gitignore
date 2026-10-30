@@ -1,1 +1,7 @@
 node_modules/
+server.log
+audit.ps1
+git-audit.txt
+nul
+.DS_Store
+*.log

@@ -1,37 +1,41 @@
-// Farol Zero – Phase 3: fixed drones that chase the player.
-// Direct chase (no pathfinding) + pairwise separation so they don't stack.
+// Farol Zero – Phase 5: continuous pressure.
+// Drones no longer sit in five fixed slots: they spawn at the arena edges on
+// a timer (spawnInterval, shortening per lit beacon), capped at maxEnemies.
+// After `fast.afterBeacons` beacons, a share of spawns are the fast drone
+// (half hp, 40% faster, 25% more contact damage) with its own silhouette.
 import * as THREE from 'three';
 
-// Fixed spawn spots (none is a "teleport on top" for the player at (0,0,4)).
-const SLOTS = [
-  [-14, -12],
-  [14, -12],
-  [0, -15],
-  [-15, 11],
-  [15, 11],
-];
-
 export function createEnemies({ scene, config, onKill = null }) {
-  const { speed, hp: maxHp, radius, count } = config.enemies;
+  const {
+    hp: baseHp, speed: baseSpeed, radius,
+    spawnInterval, intervalStep, maxEnemies,
+    minPlayerDist, spawnTries, separation, fast,
+  } = config.enemies;
   const halfLimit = config.arena.size / 2 - radius;
 
-  // Shared geometry/material — reused across restarts, never disposed here.
+  // Shared geometry — reused across restarts, never disposed here.
   const bodyGeo = new THREE.BoxGeometry(1.1, 0.7, 1.1);
-  const bodyMat = new THREE.MeshLambertMaterial({ color: config.colors.enemy });
   const eyeGeo = new THREE.BoxGeometry(0.5, 0.22, 0.2);
-  const eyeMat = new THREE.MeshLambertMaterial({ color: 0x141b26 });
   const finGeo = new THREE.BoxGeometry(1.5, 0.12, 0.3);
-  const finMat = new THREE.MeshLambertMaterial({ color: 0xcf3f2c });
   const rotorGeo = new THREE.CylinderGeometry(0.9, 0.9, 0.08, 12);
   const rotorMat = new THREE.MeshLambertMaterial({
     color: 0x2b6f8f, transparent: true, opacity: 0.55,
   });
+  // One body material per kind (regular coral / fast amber) — created once.
+  const eyeMat = new THREE.MeshLambertMaterial({ color: 0x141b26 });
+  const finMat = new THREE.MeshLambertMaterial({ color: 0xcf3f2c });
+  const bodyMats = {
+    regular: new THREE.MeshLambertMaterial({ color: config.colors.enemy }),
+    fast: new THREE.MeshLambertMaterial({ color: config.colors.enemyFast }),
+  };
 
   const list = [];
+  let timer = 0; // counts up; at the interval it tries one spawn attempt batch
 
-  function makeDrone(x, z) {
+  function makeDrone(kind, x, z) {
+    const isFast = kind === 'fast';
     const group = new THREE.Group();
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    const body = new THREE.Mesh(bodyGeo, bodyMats[isFast ? 'fast' : 'regular']);
     body.position.y = 1.1;
     group.add(body);
     const eye = new THREE.Mesh(eyeGeo, eyeMat);
@@ -47,31 +51,68 @@ export function createEnemies({ scene, config, onKill = null }) {
     group.add(rotor);
 
     const drone = {
+      kind,
       x: THREE.MathUtils.clamp(x, -halfLimit, halfLimit),
       z: THREE.MathUtils.clamp(z, -halfLimit, halfLimit),
-      hp: maxHp,
+      hp: isFast ? baseHp * fast.hpMul : baseHp,
+      maxHp: baseHp,
+      speed: isFast ? baseSpeed * fast.speedMul : baseSpeed,
       radius,
+      damage: isFast ? (config.enemies.damage ?? config.combat.contactDamage) * fast.dmgMul
+        : (config.enemies.damage ?? config.combat.contactDamage),
       alive: true,
       group,
       rotor,
     };
+    const s = isFast ? fast.scale : 1;
+    group.scale.setScalar(s);
     group.position.set(drone.x, 0, drone.z);
     scene.add(group);
     list.push(drone);
     return drone;
   }
 
-  function spawnAll() {
-    for (let i = 0; i < Math.min(count, SLOTS.length); i++) {
-      makeDrone(SLOTS[i][0], SLOTS[i][1]);
+  // Test/edge hook: spawn a drone at an exact point (kind: 'regular'|'fast').
+  function spawnAt(x, z, kind = 'regular') {
+    return makeDrone(kind, x, z);
+  }
+
+  function pickKind(litCount) {
+    if (litCount >= fast.afterBeacons && Math.random() < fast.chance) return 'fast';
+    return 'regular';
+  }
+
+  function edgeCandidate() {
+    // A random point on one of the four walls (inside the half-limits).
+    const t = THREE.MathUtils.randFloat(-halfLimit, halfLimit);
+    const side = Math.floor(Math.random() * 4);
+    switch (side) {
+      case 0: return [-halfLimit, t];
+      case 1: return [halfLimit, t];
+      case 2: return [t, -halfLimit];
+      default: return [t, halfLimit];
     }
   }
 
+  function trySpawn(litCount, player) {
+    if (list.length >= maxEnemies) {
+      // Cap reached: defer (do NOT queue anything) and retry next interval.
+      return false;
+    }
+    for (let i = 0; i < spawnTries; i++) {
+      const [x, z] = edgeCandidate();
+      if (Math.hypot(x - player.x, z - player.z) < minPlayerDist) continue;
+      makeDrone(pickKind(litCount), x, z);
+      return true;
+    }
+    // No valid candidate this round: try again at the next interval.
+    return false;
+  }
+
   function reset() {
-    // Remove every drone mesh, then respawn the fixed five (no old entities).
     for (const d of list) scene.remove(d.group);
     list.length = 0;
-    spawnAll();
+    timer = 0;
   }
 
   function damage(drone, dmg) {
@@ -94,17 +135,24 @@ export function createEnemies({ scene, config, onKill = null }) {
     }
   }
 
-  function update(dt, target) {
-    const minDist = radius * 2 + config.enemies.separation;
-    // 1) direct chase
+  function update(dt, target, litCount = 0) {
+    // Spawning: at least one edge point free of the player, under the cap.
+    timer += dt;
+    const interval = Math.max(0.3, spawnInterval - litCount * intervalStep);
+    if (timer >= interval) {
+      timer = 0;
+      trySpawn(litCount, target);
+    }
+    const minDist = radius * 2 + separation;
+    // 1) direct chase (each drone uses its own speed)
     for (const d of list) {
       if (!d.alive) continue;
       const dx = target.x - d.x;
       const dz = target.z - d.z;
       const dist = Math.hypot(dx, dz);
       if (dist > 1e-4) {
-        d.x += (dx / dist) * speed * dt;
-        d.z += (dz / dist) * speed * dt;
+        d.x += (dx / dist) * d.speed * dt;
+        d.z += (dz / dist) * d.speed * dt;
         d.group.rotation.y = Math.atan2(dx, dz);
       }
     }
@@ -139,6 +187,5 @@ export function createEnemies({ scene, config, onKill = null }) {
     }
   }
 
-  reset();
-  return { list, update, damage, sweep, reset };
+  return { list, update, damage, sweep, reset, spawnAt };
 }

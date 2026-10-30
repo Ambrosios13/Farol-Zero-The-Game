@@ -22,12 +22,26 @@ export const CONFIG = {
     invulnTime: 0.8,     // invulnerabilidade global após dano
   },
 
+  // Phase 5: continuous edge spawning (replaces the fixed five), + fast drone
   enemies: {
-    count: 5,
-    speed: 3.2,
     hp: 2,
+    speed: 3.2,
     radius: 0.7,
-    separation: 0.6,     // drones se separam abaixo dessa distância
+    damage: 10,        // contact damage, regular drone
+    separation: 0.6,   // drones se separam abaixo dessa distância
+    spawnInterval: 2,  // s between edge spawns (no drone yet at t=0)
+    intervalStep: 0.3, // each lit beacon shortens the interval by 0.3 s
+    maxEnemies: 24, // teto; at cap the spawn is deferred (NOT queued)
+    minPlayerDist: 6, // never spawn closer to the player than this
+    spawnTries: 8, // candidate edge points per interval
+    fast: { // "drone veloz": introduced after the first beacon
+      afterBeacons: 1,
+      chance: 0.5, // share of new spawns that are fast
+      hpMul: 0.5, // metade da vida          -> 1
+      speedMul: 1.4, // velocidade 40% maior   -> 4.48
+      dmgMul: 1.25, // 25% de dano            -> 12.5
+      scale: 0.85, // slightly smaller silhouette (Phase 7 refines)
+    },
   },
 
   resources: {
@@ -53,7 +67,8 @@ export const CONFIG = {
     wallTrim: 0x37e0ff,
     robot: 0xf2f5f7,
     robotAccent: 0x37e0ff,
-    enemy: 0xff6b57,   // coral (drones)
+    enemy: 0xff6b57,   // coral (drones comuns)
+    enemyFast: 0xffb347, // amber (drones velozes)
     projectile: 0x37e0ff,
     crystal: 0x37e0ff,
     beaconOff: 0x51637d,
