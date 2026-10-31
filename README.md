@@ -104,10 +104,10 @@ Este é o diferencial do projeto: **todo o código foi escrito com a ajuda de um
 
 ### Configuração do Modelo
 ```
-Modelo:    Qwen-2.5 3B Q3-XXS
+Modelo:    Qwen-3.8 27B Q3-XXS
 Loader:    Ollama
 Quantização: Q3-XXS (extremamente comprimida)
-VRAM:      Otimizada com GGUF (camadas GPU + CPU overlap)
+Harness: Pi
 ```
 
 ### O pipeline de desenvolvimento
@@ -116,7 +116,7 @@ VRAM:      Otimizada com GGUF (camadas GPU + CPU overlap)
 3. O modelo gerava código, eu validava, e iterávamos
 
 ### O que isso prova?
-- Modelos quantizados de ~3B podem ser **sérios colaboradores de programação**
+- Modelos quantizados de ~27B podem ser **sérios colaboradores de programação**
 - Com GPU dedicada (12GB VRAM), é possível rodar modelos potentes localmente
 - O custo de desenvolvimento com IA local é **zero** — é tudo offline
 - A qualidade do código gerado permite entregas funcionais e testáveis
@@ -167,7 +167,7 @@ Este projeto é software livre. Sinta-se à vontade para estudar o código, fork
 
 ## 🙌 Créditos
 
-Criado por [Seu Nome](https://github.com/SEU-USUARIO) com assistência do modelo **Qwen 2.5 3B Q3-XXS** via Ollama + pi harness.
+Criado por Ambrosio (https://github.com/Ambrosios13) com assistência do modelo **Qwen 3.8 27B Q3-XXS** via Ollama + pi harness.
 
 Hardware: [Sua configuração de PC]
 
